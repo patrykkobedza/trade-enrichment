@@ -5,10 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.Objects;
-
-import static com.verygoodbank.tes.util.Const.CSV_SEPARATOR;
 
 @Service
 public final class CsvValidationService {
@@ -30,7 +27,7 @@ public final class CsvValidationService {
     }
 
     public void validateCsvHeader(String firstLine) {
-        if (!firstLine.equals(tradesRequestCsvHeader)){
+        if (!firstLine.equals(tradesRequestCsvHeader)) {
             throw new InvalidFileException(String.format("Invalid input header: %s", firstLine));
         }
     }

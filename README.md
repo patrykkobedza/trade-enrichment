@@ -1,7 +1,7 @@
 h
 ### How to run:
 start as springboot app: `mvn spring-boot:run`. You can also use one of 3 predefined static products lists used to enrich received trades, by default 10 product list is loaded,
-you can switch used list by passing one of provided filenames `(product.csv, product_10k.csv, product_100k.csv)` as argument:
+you can switch used list by passing one of provided filenames `(product_10.csv, product_10k.csv, product_100k.csv)` as argument:
 
 ```mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dproduct.staticlist.filename=product_10k.csv'```
 
