@@ -4,7 +4,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import com.verygoodbank.tes.util.CsvReaderHelper;
 import com.verygoodbank.tes.validator.CachedDateValidationService;
-import com.verygoodbank.tes.validator.CsvValidationService;
+import com.verygoodbank.tes.validator.TradeCsvValidationService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,15 +25,15 @@ import static com.verygoodbank.tes.util.Const.*;
 
 @Service
 @Slf4j
-public class BulkEnrichmentService {
+public class TradeBulkEnrichmentService {
 
-    private final CsvValidationService validationService;
+    private final TradeCsvValidationService validationService;
     private final ProductService productService;
 
     private final CachedDateValidationService cachedDateValidationService;
 
 
-    public BulkEnrichmentService(CsvValidationService validationService, ProductService productService, CachedDateValidationService cachedDateValidationService) {
+    public TradeBulkEnrichmentService(TradeCsvValidationService validationService, ProductService productService, CachedDateValidationService cachedDateValidationService) {
         this.validationService = validationService;
         this.productService = productService;
         this.cachedDateValidationService = cachedDateValidationService;

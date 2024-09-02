@@ -8,10 +8,10 @@ import org.springframework.web.multipart.MultipartFile;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-class CsvValidationServiceTest {
+class TradeCsvValidationServiceTest {
 
     String[] VALID_HEADER = new String[]{"date", "product_name", "currency", "price"};
-    CsvValidationService validationService = new CsvValidationService(new String[]{"date", "product_name", "currency", "price"});
+    TradeCsvValidationService validationService = new TradeCsvValidationService(new String[]{"date", "product_name", "currency", "price"});
 
     @Test
     void validateCsvFileValidTest() {
