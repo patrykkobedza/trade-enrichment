@@ -14,8 +14,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.opencsv.ICSVParser.DEFAULT_ESCAPE_CHARACTER;
 import static com.opencsv.ICSVParser.DEFAULT_SEPARATOR;
@@ -32,11 +37,14 @@ public class TradeBulkEnrichmentService {
 
     private final CachedDateValidationService cachedDateValidationService;
 
+    private ExecutorService executorService;
+
 
     public TradeBulkEnrichmentService(TradeCsvValidationService validationService, ProductService productService, CachedDateValidationService cachedDateValidationService) {
         this.validationService = validationService;
         this.productService = productService;
         this.cachedDateValidationService = cachedDateValidationService;
+        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     @SneakyThrows
@@ -52,10 +60,14 @@ public class TradeBulkEnrichmentService {
             CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(outputStream), DEFAULT_SEPARATOR, NO_QUOTE_CHARACTER, DEFAULT_ESCAPE_CHARACTER, DEFAULT_LINE_END);
 
             csvWriter.writeNext(replaceProductHeader(headerValues));
+            List<CompletableFuture<Void>> tasks = new ArrayList<>();
             while (nextLineValues != null) {
-                processLine(csvReaderHelper, nextLineValues, csvWriter);
+                String[] finalNextLineValues = nextLineValues;
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> processLine(csvReaderHelper, finalNextLineValues, csvWriter), executorService);
+                tasks.add(future);
                 nextLineValues = csvReader.readNext();
             }
+            CompletableFuture.allOf(tasks.toArray(new CompletableFuture[tasks.size()])).get();
             csvReader.close();
             csvWriter.close();
         }
