@@ -1,23 +1,27 @@
 package com.verygoodbank.tes.service;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
+import com.verygoodbank.tes.util.CsvReaderHelper;
+import com.verygoodbank.tes.validator.CachedDateValidationService;
 import com.verygoodbank.tes.validator.CsvValidationService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.io.OutputStreamWriter;
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
-import static com.verygoodbank.tes.util.Const.CSV_SEPARATOR;
-import static com.verygoodbank.tes.util.Const.EMPTY_STRING;
+import static com.opencsv.ICSVParser.DEFAULT_ESCAPE_CHARACTER;
+import static com.opencsv.ICSVParser.DEFAULT_SEPARATOR;
+import static com.opencsv.ICSVWriter.DEFAULT_LINE_END;
+import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
+import static com.verygoodbank.tes.util.Const.*;
 
 @Service
 @Slf4j
@@ -25,54 +29,56 @@ public class BulkEnrichmentService {
 
     private final CsvValidationService validationService;
     private final ProductService productService;
-    private final DateTimeFormatter formatter;
 
-    private final String tradesResponseCsvHeader;
+    private final CachedDateValidationService cachedDateValidationService;
 
-    public BulkEnrichmentService(CsvValidationService validationService, ProductService productService,
-                                 @Value("${trades.response.csv.header}") String tradesResponseCsvHeader,
-                                 @Value("${trades.request.csv.dateformat}") String dateFormat) {
+
+    public BulkEnrichmentService(CsvValidationService validationService, ProductService productService, CachedDateValidationService cachedDateValidationService) {
         this.validationService = validationService;
         this.productService = productService;
-        this.tradesResponseCsvHeader = tradesResponseCsvHeader;
-        this.formatter = DateTimeFormatter.ofPattern(dateFormat);
-    }
-
-    public void processFileRequest(MultipartFile file, OutputStream outputStream) throws IOException {
-        validationService.validateCsvFile(file);
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            validationService.validateCsvHeader(reader.readLine());
-            while (reader.ready()) {
-                writeCsvHeader(outputStream);
-                reader.lines().forEach(line -> processLine(line, outputStream));
-            }
-            outputStream.close();
-        }
-    }
-
-    private void writeCsvHeader(OutputStream outputStream) throws IOException {
-        outputStream.write(tradesResponseCsvHeader.getBytes());
-        outputStream.write(System.lineSeparator().getBytes());
+        this.cachedDateValidationService = cachedDateValidationService;
     }
 
     @SneakyThrows
-    private void processLine(String line, OutputStream outputStream) {
-        String[] values = line.split(CSV_SEPARATOR);
-        if (isDateStringValid(values[0])) {
-            values[1] = productService.resolveProductNameById(values[1]);
-            String result = Arrays.stream(values).collect(Collectors.joining(CSV_SEPARATOR, EMPTY_STRING, System.lineSeparator()));
-            outputStream.write(result.getBytes());
+    public void processFileRequest(MultipartFile file, OutputStream outputStream) {
+        validationService.validateCsvFile(file);
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            CSVReader csvReader = new CSVReader(reader);
+            String[] headerValues = csvReader.readNext();
+            validationService.validateCsvHeader(headerValues);
+            CsvReaderHelper csvReaderHelper = new CsvReaderHelper(headerValues);
+            String[] nextLineValues = csvReader.readNext();
+            CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(outputStream), DEFAULT_SEPARATOR, NO_QUOTE_CHARACTER, DEFAULT_ESCAPE_CHARACTER, DEFAULT_LINE_END);
+
+            csvWriter.writeNext(replaceProductHeader(headerValues));
+            while (nextLineValues != null) {
+                processLine(csvReaderHelper, nextLineValues, csvWriter);
+                nextLineValues = csvReader.readNext();
+            }
+            csvReader.close();
+            csvWriter.close();
         }
     }
 
-
-    private boolean isDateStringValid(String dateString) {
-        try {
-            formatter.parse(dateString);
-            return true;
-        } catch (DateTimeParseException e) {
-            log.error("date '{}' is not in yyyyMMdd format.", dateString);
-            return false;
+    private void processLine(CsvReaderHelper csvReaderHelper, String[] nextLineValues, CSVWriter csvWriter) {
+        String date = csvReaderHelper.getValueByName(nextLineValues, DATE_CSV_HEADER);
+        boolean isDateValid = cachedDateValidationService.isDateStringValid(date);
+        if (isDateValid) {
+            String productName = productService.resolveProductNameById(csvReaderHelper.getValueByName(nextLineValues, PRODUCT_ID_CSV_HEADER));
+            nextLineValues[csvReaderHelper.getFieldId(PRODUCT_ID_CSV_HEADER)] = productName;
+            csvWriter.writeNext(nextLineValues);
         }
     }
+
+    private String[] replaceProductHeader(String[] originalHeaders) {
+        return Arrays.stream(originalHeaders).map(e -> {
+            if (Objects.equals(e, PRODUCT_ID_CSV_HEADER)) {
+                return PRODUCT_NAME_CSV_HEADER;
+            }
+            return e;
+        }).toArray(String[]::new);
+    }
+
+
 }

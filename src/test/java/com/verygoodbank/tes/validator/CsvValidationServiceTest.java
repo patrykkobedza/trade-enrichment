@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 
 class CsvValidationServiceTest {
 
-    private static final String VALID_HEADER = "a,b,c,d";
-    CsvValidationService validationService = new CsvValidationService(VALID_HEADER);
+    String[] VALID_HEADER = new String[]{"date", "product_name", "currency", "price"};
+    CsvValidationService validationService = new CsvValidationService(new String[]{"date", "product_name", "currency", "price"});
 
     @Test
     void validateCsvFileValidTest() {
@@ -42,7 +42,7 @@ class CsvValidationServiceTest {
 
     @Test
     void validateCsvHeaderInvalidTest() {
-        assertThrows(InvalidFileException.class, () -> validationService.validateCsvHeader("test1"));
+        assertThrows(InvalidFileException.class, () -> validationService.validateCsvHeader(new String[]{"test1","test2"}));
     }
 
 }
