@@ -3,15 +3,12 @@ package com.verygoodbank.tes.web.controller;
 
 import com.verygoodbank.tes.exception.InvalidFileException;
 import com.verygoodbank.tes.service.BulkEnrichmentService;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
 @RequestMapping("api/v1")
@@ -27,9 +24,8 @@ public class TradeEnrichmentController {
 
 
     @PostMapping("/enrich")
-    public void enrichTrades(@RequestParam("file") MultipartFile file, HttpServletResponse response) throws IOException {
-        ServletOutputStream os = response.getOutputStream();
-        bulkEnrichmentService.processFileRequest(file, os);
+    public StreamingResponseBody enrichTrades(@RequestParam("file") MultipartFile file) {
+        return os -> bulkEnrichmentService.processFileRequest(file, os);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE)

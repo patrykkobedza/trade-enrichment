@@ -9,10 +9,10 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,11 +34,13 @@ class TradeEnrichmentControllerTest {
                         .file(file)
                         .characterEncoding("UTF-8"))
                 .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andDo(MvcResult::getAsyncResult)
                 .andExpect(content().string("""
-                        date,product_name,currency,price\r
-                        20160101,test1,EUR,10.0\r
-                        20160101,test2,EUR,20.1\r
-                        20160101,Missing Product Name,EUR,35.34\r
+                        date,product_name,currency,price
+                        20160101,test1,EUR,10.0
+                        20160101,test2,EUR,20.1
+                        20160101,Missing Product Name,EUR,35.34
                         """));
 
 
