@@ -2,7 +2,7 @@ package com.verygoodbank.tes.web.controller;
 
 
 import com.verygoodbank.tes.exception.InvalidFileException;
-import com.verygoodbank.tes.service.BulkEnrichmentService;
+import com.verygoodbank.tes.service.TradeBulkEnrichmentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,17 +15,17 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @Slf4j
 public class TradeEnrichmentController {
 
-    private final BulkEnrichmentService bulkEnrichmentService;
+    private final TradeBulkEnrichmentService tradeBulkEnrichmentService;
 
     @Autowired
-    public TradeEnrichmentController(BulkEnrichmentService bulkEnrichmentService) {
-        this.bulkEnrichmentService = bulkEnrichmentService;
+    public TradeEnrichmentController(TradeBulkEnrichmentService tradeBulkEnrichmentService) {
+        this.tradeBulkEnrichmentService = tradeBulkEnrichmentService;
     }
 
 
     @PostMapping("/enrich")
     public StreamingResponseBody enrichTrades(@RequestParam("file") MultipartFile file) {
-        return os -> bulkEnrichmentService.processFileRequest(file, os);
+        return os -> tradeBulkEnrichmentService.processFileRequest(file, os);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE)

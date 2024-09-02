@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
-public final class CsvValidationService {
+public final class TradeCsvValidationService {
 
     private final String[] tradesRequestCsvHeader;
 
-    public CsvValidationService(@Value("${trades.request.csv.header}") String[] tradesRequestCsvHeader) {
+    public TradeCsvValidationService(@Value("${trades.request.csv.header}") String[] tradesRequestCsvHeader) {
         this.tradesRequestCsvHeader = tradesRequestCsvHeader;
     }
 

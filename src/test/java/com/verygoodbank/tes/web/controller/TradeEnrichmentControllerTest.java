@@ -1,6 +1,6 @@
 package com.verygoodbank.tes.web.controller;
 
-import com.verygoodbank.tes.service.BulkEnrichmentService;
+import com.verygoodbank.tes.service.TradeBulkEnrichmentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,7 +23,7 @@ class TradeEnrichmentControllerTest {
     private MockMvc mvc;
 
     @Autowired
-    BulkEnrichmentService bulkEnrichmentService;
+    TradeBulkEnrichmentService tradeBulkEnrichmentService;
 
     @Test
     void e2eTest() throws Exception {
